@@ -8,9 +8,6 @@ arm/*
 gcc/*
 !gcc/*.bat
 !gcc/Makefile
-iar/*
-!iar/*.ewp
-!iar/*.eww
 *.uvgui.*
 *.dep
 *.log
