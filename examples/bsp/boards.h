@@ -39,7 +39,7 @@
 #elif defined(BOARD_N5DK1)
   #include "n5_starterkit.h"
 #elif defined(BOARD_CUSTOM)
-  #include "custom_board.h"
+  #include "devboard.h"
 #else
 #error "Board is not defined"
 

@@ -17,3 +17,5 @@ iar/*
 *.bak
 *.ini
 *.txt
+*.hex
+*.out
