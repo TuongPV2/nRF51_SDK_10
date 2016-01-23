@@ -40,6 +40,8 @@
   #include "n5_starterkit.h"
 #elif defined(BOARD_CUSTOM)
   #include "devboard.h"
+#elif defined(SMARTLOCK)
+ #include "smartlock.h"
 #else
 #error "Board is not defined"
 
