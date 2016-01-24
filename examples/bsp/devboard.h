@@ -16,7 +16,7 @@
 // LEDs definitions for DEVELOPEMENT BOARD
 #define LEDS_NUMBER    1
 #define LED_START      28
-#define LED_1          28
+#define LED_1          14   // Dung tam chan 14 de debug
 #define LEDS_LIST {LED_1}
 #define BSP_LED_0      LED_1
 #define BSP_LED_0_MASK (1<<BSP_LED_0)
@@ -24,17 +24,26 @@
 /* all LEDs are lit when GPIO is low */
 #define LEDS_INV_MASK  LEDS_MASK
 
-/********************************** BUTTONs ***********************************/
-// BUTTONs definitions for DEVELOPEMENT BOARD
-#define BUTTONS_NUMBER 1
-#define BUTTON_START   8
-#define BUTTON_1       8
+#define COLOR_SEL1      19
+#define COLOR_SEL2      18
+/*****************************TOUCH BUTTONs ***********************************/
+// Touch BUTTONs definitions for DEVELOPEMENT BOARD
+#define BUTTONS_NUMBER 3
+#define BUTTON_START   21
+#define BUTTON_1       21	/* Touch button 1*/
+#define BUTTON_2       22	/* Touch button 1*/
+#define BUTTON_3       23	/* Touch button 1*/
 #define BUTTON_PULL    NRF_GPIO_PIN_PULLUP
-#define BUTTONS_LIST { BUTTON_1}
+#define BUTTONS_LIST { BUTTON_1, BUTTON_2, BUTTON_3}
+
 #define BSP_BUTTON_0   BUTTON_1
+#define BSP_BUTTON_1   BUTTON_2
+#define BSP_BUTTON_2   BUTTON_3
 
 #define BSP_BUTTON_0_MASK (1<<BSP_BUTTON_0)
-#define BUTTONS_MASK   0x00000100   // -> 8
+#define BSP_BUTTON_1_MASK (1<<BSP_BUTTON_1)
+#define BSP_BUTTON_2_MASK (1<<BSP_BUTTON_2)
+//#define BUTTONS_MASK   0x00000100   // -> 8
 
 /******************************* UART *****************************************/
 #define RX_PIN_NUMBER  11

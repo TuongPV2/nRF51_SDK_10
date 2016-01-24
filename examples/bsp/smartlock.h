@@ -44,31 +44,24 @@
 /* all LEDs are lit when GPIO is low */
 #define LEDS_INV_MASK  LEDS_MASK
 
-/********************************** BUTTONs ***********************************/
-#define BUTTONS_NUMBER 2
-
-#define BUTTON_START   19
-#define BUTTON_1       19
-//#define BUTTON_2       18
-//#define BUTTON_3       19
-//#define BUTTON_4       20
-//#define BUTTON_STOP    20
-//#define BUTTON_PULL    NRF_GPIO_PIN_PULLUP
-
-#define BUTTONS_LIST {BUTTON_1, BUTTON_2}
+/*****************************TOUCH BUTTONs ***********************************/
+// Touch BUTTONs definitions for DEVELOPEMENT BOARD
+#define BUTTONS_NUMBER 3
+#define BUTTON_START   21
+#define BUTTON_1       21	/* Touch button 1*/
+#define BUTTON_2       22	/* Touch button 1*/
+#define BUTTON_3       23	/* Touch button 1*/
+#define BUTTON_PULL    NRF_GPIO_PIN_PULLUP
+#define BUTTONS_LIST { BUTTON_1, BUTTON_2, BUTTON_3}
 
 #define BSP_BUTTON_0   BUTTON_1
 #define BSP_BUTTON_1   BUTTON_2
-//#define BSP_BUTTON_2   BUTTON_3
-//#define BSP_BUTTON_3   BUTTON_4
+#define BSP_BUTTON_2   BUTTON_3
 
 #define BSP_BUTTON_0_MASK (1<<BSP_BUTTON_0)
 #define BSP_BUTTON_1_MASK (1<<BSP_BUTTON_1)
-//#define BSP_BUTTON_2_MASK (1<<BSP_BUTTON_2)
-//#define BSP_BUTTON_3_MASK (1<<BSP_BUTTON_3)
-
-#define BUTTONS_MASK   0x001E0000   // -> 20.19.18.17
-                                    // Need to changed to 19.18
+#define BSP_BUTTON_2_MASK (1<<BSP_BUTTON_2)
+//#define BUTTONS_MASK   0x00000100   // -> 8
 
 /******************************* UART *****************************************/
 //#define RX_PIN_NUMBER  11
@@ -98,11 +91,6 @@
 #define DRV_SLEEP		28	/** Turn off DRV8837 */
 #define DRV_IN1			25	/** Drv's PWM input */
 #define DRV_IN2			24	/** Drv's PWM input */
-
-/****************************** Cap. Touchs ***********************************/
-#define CTOUCH_1		21	/** Read output of TTP223 */
-#define CTOUCH_2		22	/** Read output of TTP223 */
-#define CTOUCH_3		23	/** Read output of TTP223 */
 
 
 #define VBAT_SEN		1	/** ADC <--- Voltage sensing */

@@ -66,6 +66,8 @@ int main(void)
     // Configure LED-pins as outputs
     nrf_gpio_cfg_output(BSP_LED_0);
     nrf_gpio_pin_set(BSP_LED_0);
+    //nrf_gpio_cfg_output(COLOR_SEL1);
+    //nrf_gpio_pin_set(COLOR_SEL1);
 
     UNUSED_VARIABLE(xTaskCreate( vLed0Function, "L0", configMINIMAL_STACK_SIZE + 200, NULL, 2, &xLed0Handle ));    // LED0 task creation
 
