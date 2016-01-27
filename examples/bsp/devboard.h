@@ -45,6 +45,14 @@
 #define BSP_BUTTON_2_MASK (1<<BSP_BUTTON_2)
 //#define BUTTONS_MASK   0x00000100   // -> 8
 
+/****************************** Motor control *********************************/
+#define ENCODER_1		3	/** Connect to  Encoder */
+#define ENCODER_2		2	/** Connect to  Encoder */
+
+#define DRV_SLEEP		28	/** Turn off DRV8837 */
+#define DRV_IN1			25	/** Drv's PWM input */
+#define DRV_IN2			24	/** Drv's PWM input */
+
 /******************************* UART *****************************************/
 #define RX_PIN_NUMBER  11
 #define TX_PIN_NUMBER  26
