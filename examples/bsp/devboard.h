@@ -54,8 +54,8 @@
 #define DRV_IN2			24	/** Drv's PWM input */
 
 /******************************* UART *****************************************/
-#define RX_PIN_NUMBER  11
-#define TX_PIN_NUMBER  26
+#define RX_PIN_NUMBER  2
+#define TX_PIN_NUMBER  3
 #define HWFC           false
 
 #define VBAT_SEN		1	/** ADC <--- Voltage sensing */
