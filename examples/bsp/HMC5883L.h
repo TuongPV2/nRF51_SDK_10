@@ -60,4 +60,5 @@ enum HMC5883L {
 #define MD_SINGLE       0x01
 #define MD_IDLE         0x03
 
+
 #endif
