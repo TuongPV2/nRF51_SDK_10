@@ -59,10 +59,11 @@
 #define HWFC           false
 
 /******************************** I2C *****************************************/
-#define I2C0_DATA		8 	/** SDA  */
-#define I2C0_CLK		9 	/** SCL  */
-#define I2C0_RST		10 	/** SCL  */
-#define I2C0_ALERT		11 	/** SCL  */ 
+#define I2C_ID			0	/** TWI0 */
+#define I2C_DATA		8 	/** SDA  */
+#define I2C_CLK			9 	/** SCL  */
+#define I2C_RST			10 	/** SCL  */
+#define I2C_ALERT		11 	/** SCL  */ 
 
 #define VBAT_SEN		1	/** ADC <--- Voltage sensing */
 

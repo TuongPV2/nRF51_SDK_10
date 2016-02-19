@@ -19,7 +19,6 @@
  * This file contains the source code for a sample application using UART.
  * 
  */
-
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -38,60 +37,23 @@
 #define UART_TX_BUF_SIZE 256    /** UART TX buffer size. */
 #define UART_RX_BUF_SIZE 1      /** UART RX buffer size. */
 
-#define NUMBER_OF_SAMPLES 20    /** Max = 255 */
 /**
  *  @ Global variables
  */
-/**
- * @brief Structure for holding sum of samples from accelerometer.
- */
-// typedef struct
-// {
-//     int16_t x;
-//     int16_t y;
-//     int16_t z;
-// } sum_t;
-// static sum_t m_sum = {0};
-
-/**
- * @brief Union to keep raw and converted data from accelerometer samples at one memory space.
- */
-// typedef union{
-//     uint8_t raw;
-//     int8_t  conv;
-// } elem_t;
-
-/**
- * @brief Enum for selecting accelerometer orientation.
- */
-// typedef enum{
-//     LEFT = 1,
-//     RIGHT = 2,
-//     DOWN = 5,
-//     UP = 6
-// } accelerometer_orientation_t;
-
-/**
- * @brief Structure for holding samples from accelerometer.
- */
-typedef struct
-{
-    uint8_t  x;
-    uint8_t  y;
-    uint8_t  z;
-    //uint8_t tilt;
-} sample_t;
+/** Data structure: [0] Register, [1] Data */
+uint8_t cfg_a[2] = {HMC5883L_CFG_A, 0x70}; /* 8-average, 15 Hz default, normal measurement */
+uint8_t cfg_b[2] = {HMC5883L_CFG_B, 0xA0}; /* Gain=5, or any other desired gain */
 
 
-/* Buffer for samples. */
-//static sample_t m_sample_buffer[NUMBER_OF_SAMPLES] = {0};
+uint32_t i_am = 0;
+static volatile bool mode_status;
 
 /* Indicates if reading operation from accelerometer has ended. */
 static volatile bool m_xfer_done = true;
 /* Indicates if setting mode operation has ended. */
 //static volatile bool m_set_mode_done;
 
-static const nrf_drv_twi_t m_twi_hmc5883 = NRF_DRV_TWI_INSTANCE(0);
+static const nrf_drv_twi_t m_twi_hmc5883 = NRF_DRV_TWI_INSTANCE(I2C_ID);
 
 void debugconsole_events_handler(app_uart_evt_t * p_event)
 {
@@ -133,107 +95,20 @@ void debug_console_init(void)
 }
 
 /**
- * @brief Function for averaging samples from accelerometer.
- */
-// void read_data(sample_t * p_new_sample)
-// {
-//     /* Variable to count samples. */
-//     static uint8_t sample_idx;
-//     static uint8_t prev_tilt;
-    
-//     sample_t * p_sample = &m_sample_buffer[sample_idx];
-    
-//     /* Subtracting oldest sample. */
-//     m_sum.x    -= p_sample->x.conv;
-//     m_sum.y    -= p_sample->y.conv;
-//     m_sum.z    -= p_sample->z.conv;
-    
-//     p_sample->tilt = p_new_sample->tilt;    
-    
-//     int_to_uint(&p_sample->x.conv, p_new_sample->x.raw);
-//     int_to_uint(&p_sample->y.conv, p_new_sample->y.raw);
-//     int_to_uint(&p_sample->z.conv, p_new_sample->z.raw);
-    
-//     /* Adding new sample. This way we always have defined number of samples. */
-//     m_sum.x    += p_sample->x.conv;
-//     m_sum.y    += p_sample->y.conv;
-//     m_sum.z    += p_sample->z.conv;
-
-//     ++sample_idx;
-//     if (sample_idx >= NUMBER_OF_SAMPLES)
-//     {
-//         sample_idx = 0;
-//     }
-
-//     if (sample_idx == 0 || (prev_tilt && (prev_tilt != p_sample->tilt)))
-//     {
-//         char const * orientation;
-//         switch ((p_sample->tilt >> 2) & 0x07)
-//         {
-//             case LEFT: 
-//                 orientation = "LEFT";
-//                 break;
-//             case RIGHT:
-//                 orientation = "RIGHT"; 
-//                 break;
-//             case DOWN:             
-//                 orientation = "DOWN";  
-//                 break;
-//             case UP:
-//                 orientation = "UP";    
-//                 break;
-//             default: 
-//                 orientation = "?";     
-//                 break;
-//         }
-//         printf("X: %3d, Y: %3d, Z: %3d | %s%s%s\r\n",
-//                 m_sum.x / NUMBER_OF_SAMPLES,
-//                 m_sum.y / NUMBER_OF_SAMPLES,
-//                 m_sum.z / NUMBER_OF_SAMPLES,
-//                 orientation,
-//                 (p_sample->tilt & TILT_TAP_MASK) ? " TAP"   : "",
-//                 (p_sample->tilt & TILT_SHAKE_MASK) ? " SHAKE" : "");
-//                 prev_tilt = p_sample->tilt;
-//     }
-// }
-
-/**
- * @brief 
- */
-// void hmc5883_set_mode(void)
-// {
-//     ret_code_t err_code;
-//     /* Writing to MMA7660_REG_MODE "1" enables the accelerometer. */
-//     uint8_t reg[2] = {MMA7660_REG_MODE, ACTIVE_MODE};
-
-//     err_code = nrf_drv_twi_tx(&m_twi_mma_7660, MMA7660_ADDR, reg, sizeof(reg), false);  
-//     APP_ERROR_CHECK(err_code);
-    
-//     while(m_set_mode_done == false);
-// }
-
-/**
  * @brief HMC5883L events handler.
  */
 void hmc5883_events_handler(nrf_drv_twi_evt_t const * p_event, void * p_context)
 {   
-    ret_code_t err_code;
-    static sample_t m_sample;
+    //static sample_t m_sample;
     
     switch(p_event->type)
     {
         case NRF_DRV_TWI_RX_DONE:
-            //read_data(&m_sample);
-            printf("X:%d \n\r", m_sample.x);
-            printf("Y:%d \n\r", m_sample.y);
-            printf("Z:%d \n\r", m_sample.z);
             m_xfer_done = true;
             break;
+
         case NRF_DRV_TWI_TX_DONE:
-            m_xfer_done = false;
-            /* Read 4 bytes from the specified address. */
-            err_code = nrf_drv_twi_rx(&m_twi_hmc5883, HMC5883L_ADDRESS, (uint8_t*)&m_sample, sizeof(m_sample), false);
-            APP_ERROR_CHECK(err_code);
+            mode_status = true;
             break;
         default:
             break;        
@@ -249,8 +124,8 @@ void hmc5883_twi_init(void)
     ret_code_t err_code;
     
     const nrf_drv_twi_config_t hmc5883_config = {
-       .scl                = I2C0_CLK,
-       .sda                = I2C0_DATA,
+       .scl                = I2C_CLK,
+       .sda                = I2C_DATA,
        .frequency          = NRF_TWI_FREQ_100K,
        .interrupt_priority = APP_IRQ_PRIORITY_HIGH
     };
@@ -261,36 +136,98 @@ void hmc5883_twi_init(void)
     nrf_drv_twi_enable(&m_twi_hmc5883);
 }
 
+/**
+ * @brief Function for writing data to a sensor.
+ *
+ * Transmission will be stopped when error or time-out occurs.
+ *
+ * @param[in] sensor_Addr     Address of a specific slave device (only 7 LSB).
+ * @param[in] p_Data          Pointer to a receive buffer.
+ * @param[in] length          Number of bytes to be received.
+ * @param[in] flag            After a specified number of bytes, transmission will 
+ *                            be suspended (if flag is set) or stopped (if not).
+ * @retval 
+ */
+uint32_t sensorBSP_write(uint8_t sensor_Addr, uint8_t* p_Data, uint32_t length, bool flag)
+{
+    ret_code_t err_code;
+    
+    err_code = nrf_drv_twi_tx(&m_twi_hmc5883, sensor_Addr, p_Data, length, flag);
+    APP_ERROR_CHECK(err_code);
+
+    return err_code;
+}
+
+/**
+ * @brief Function for reading data from a sensor.
+ *
+ * Transmission will be stopped when error or time-out occurs.
+ *
+ * @param[in] sensor_Addr     Address of a specific slave device (only 7 LSB).
+ * @param[in] p_Data          Pointer to a receive buffer.
+ * @param[in] length          Number of bytes to be received.
+ * @param[in] flag            After a specified number of bytes, transmission will 
+ *                            be suspended (if flag is set) or stopped (if not).
+ */
+uint32_t sensorBSP_read(uint8_t sensor_Addr, uint8_t sensor_Reg, 
+                        uint8_t* p_Data, uint32_t length, bool flag)
+{
+    ret_code_t err_code;
+    //uint32_t length = 1;
+    err_code = sensorBSP_write(sensor_Addr, &sensor_Reg, 1U, flag);
+    APP_ERROR_CHECK(err_code);
+    err_code = nrf_drv_twi_rx(&m_twi_hmc5883, sensor_Addr, p_Data, length, flag);
+    APP_ERROR_CHECK(err_code);
+
+    return err_code;
+}
+
+void set_mode(void)
+{
+	ret_code_t err_code;
+    uint8_t cfg_mode[2] = {HMC5883L_MODE, 0x00}; /* Continuous-measurement mode */
+
+    err_code = nrf_drv_twi_tx(&m_twi_hmc5883, HMC5883L_ADDRESS, cfg_mode, sizeof(cfg_mode), true);
+	APP_ERROR_CHECK(err_code);
+    //while(mode_status == false);
+}
+
+
+uint32_t who_am_i()
+{
+    ret_code_t err_code;
+    uint8_t value;
+    uint8_t addr8 = HMC5883L_ID_A;
+
+    err_code = nrf_drv_twi_tx(&m_twi_hmc5883, HMC5883L_ADDRESS, &addr8, 1, true);
+
+    if (NRF_SUCCESS == err_code)
+        err_code = nrf_drv_twi_rx(&m_twi_hmc5883, HMC5883L_ADDRESS, &value, 1, true);
+    APP_ERROR_CHECK(err_code);
+	return value;
+}
 
 /**
  * @brief Function for main application entry.
  */
 int main(void)
 {
-    LEDS_CONFIGURE(LEDS_MASK);
-    LEDS_OFF(LEDS_MASK);
-
     debug_console_init();
 
     printf("\n\rThis is DEBUG CONSOLE\n\r");
     
     hmc5883_twi_init();
+    nrf_delay_ms(10);
 
-    uint8_t reg = 0;
-    ret_code_t err_code;
+	i_am = who_am_i();
 
-    while (true)
+    nrf_delay_ms(10);
+    
+    while(true)
     {
         nrf_delay_ms(100);
-        /* Start transaction with a slave with the specified address. */
-        do
-        {
-            /* code */
-            __WFE();
-        } while (m_xfer_done == false);
-        err_code = nrf_drv_twi_tx(&m_twi_hmc5883, HMC5883L_ADDRESS, &reg, sizeof(reg), true);
-        APP_ERROR_CHECK(err_code);
-        m_xfer_done = false;
+        
+        __WFE();
     }
 
 }
