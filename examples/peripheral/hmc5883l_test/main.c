@@ -32,7 +32,7 @@
 #include "app_twi.h"
 #include "app_error.h"
 #include "bsp.h"
-#include "HMC5883L.h"
+#include "CAP1114.h"
 
 #define UART_TX_BUF_SIZE 256    /** UART TX buffer size. */
 #define UART_RX_BUF_SIZE 1      /** UART RX buffer size. */
@@ -41,11 +41,13 @@
  *  @ Global variables
  */
 /** Data structure: [0] Register, [1] Data */
-uint8_t cfg_a[2] = {HMC5883L_CFG_A, 0x70}; /* 8-average, 15 Hz default, normal measurement */
-uint8_t cfg_b[2] = {HMC5883L_CFG_B, 0xA0}; /* Gain=5, or any other desired gain */
 
 
 uint32_t i_am = 0;
+uint32_t prod_id = 0;
+uint32_t manuf_id = 0;
+uint32_t rev_id = 0;
+
 static volatile bool mode_status;
 
 /* Indicates if reading operation from accelerometer has ended. */
@@ -182,27 +184,28 @@ uint32_t sensorBSP_read(uint8_t sensor_Addr, uint8_t sensor_Reg,
     return err_code;
 }
 
-void set_mode(void)
-{
-	ret_code_t err_code;
-    uint8_t cfg_mode[2] = {HMC5883L_MODE, 0x00}; /* Continuous-measurement mode */
+//void set_mode(void)
+//{
+//	ret_code_t err_code;
+//    uint8_t cfg_mode[2] = {HMC5883L_MODE, 0x00}; /* Continuous-measurement mode */
+//
+//    err_code = nrf_drv_twi_tx(&m_twi_hmc5883, HMC5883L_ADDRESS, cfg_mode, sizeof(cfg_mode), true);
+//	APP_ERROR_CHECK(err_code);
+//    //while(mode_status == false);
+//}
 
-    err_code = nrf_drv_twi_tx(&m_twi_hmc5883, HMC5883L_ADDRESS, cfg_mode, sizeof(cfg_mode), true);
-	APP_ERROR_CHECK(err_code);
-    //while(mode_status == false);
-}
 
-
-uint32_t who_am_i()
+uint32_t who_am_i(uint8_t reg)
 {
     ret_code_t err_code;
     uint8_t value;
-    uint8_t addr8 = HMC5883L_ID_A;
+    uint8_t addr8;  // = HMC5883L_ID_A;
+    addr8 = reg;
 
-    err_code = nrf_drv_twi_tx(&m_twi_hmc5883, HMC5883L_ADDRESS, &addr8, 1, true);
+    err_code = nrf_drv_twi_tx(&m_twi_hmc5883, CAP1114_ADDR, &addr8, 1, true);
 
     if (NRF_SUCCESS == err_code)
-        err_code = nrf_drv_twi_rx(&m_twi_hmc5883, HMC5883L_ADDRESS, &value, 1, true);
+        err_code = nrf_drv_twi_rx(&m_twi_hmc5883, CAP1114_ADDR, &value, 1, true);
     APP_ERROR_CHECK(err_code);
 	return value;
 }
@@ -212,16 +215,25 @@ uint32_t who_am_i()
  */
 int main(void)
 {
+    nrf_gpio_cfg_output(I2C_RST);
+    //nrf_gpio_cfg_output(DRV_IN1);
+    nrf_gpio_pin_set(I2C_RST);
+
     debug_console_init();
 
     printf("\n\rThis is DEBUG CONSOLE\n\r");
     
     hmc5883_twi_init();
     nrf_delay_ms(10);
+    nrf_gpio_pin_clear(I2C_RST);
+    nrf_delay_ms(1);
 
-	i_am = who_am_i();
+	i_am = who_am_i(CAP1114_ADDR);
 
-    nrf_delay_ms(10);
+    prod_id = who_am_i(PROD_ID);
+    manuf_id = who_am_i(MANUF_ID);
+    rev_id = who_am_i(REV_ID);
+
     
     while(true)
     {

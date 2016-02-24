@@ -33,6 +33,8 @@ SOFTWARE.
  #ifndef CAP1114_H
  #define CAP1114_H
 
+ #define CAP1114_ADDR		0x28	/** 7-bit address */
+
  #define CAP1114_CS			0x00	/** Main Status Control */
  #define BUTTON_S_1			0x03	/** Button status 1	*/
  #define BUTTON_S_2			0x04	/** Button status 2	*/
