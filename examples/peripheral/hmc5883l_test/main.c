@@ -44,9 +44,6 @@
 
 
 uint32_t i_am = 0;
-uint32_t prod_id = 0;
-uint32_t manuf_id = 0;
-uint32_t rev_id = 0;
 
 static volatile bool mode_status;
 
@@ -184,23 +181,19 @@ uint32_t sensorBSP_read(uint8_t sensor_Addr, uint8_t sensor_Reg,
     return err_code;
 }
 
-//void set_mode(void)
-//{
-//	ret_code_t err_code;
-//    uint8_t cfg_mode[2] = {HMC5883L_MODE, 0x00}; /* Continuous-measurement mode */
-//
-//    err_code = nrf_drv_twi_tx(&m_twi_hmc5883, HMC5883L_ADDRESS, cfg_mode, sizeof(cfg_mode), true);
-//	APP_ERROR_CHECK(err_code);
-//    //while(mode_status == false);
-//}
-
-
+/**
+ * @brief   Test TWI communication and Slave
+ * @param[in] reg : slave's register adrress
+ *
+ * Note because of nrf_drv_twi_tx and nrf_drv_twi_rx @param[*pdata]'s type is uint8_t
+ * so only read the register form 0 to 127
+ */
 uint32_t who_am_i(uint8_t reg)
 {
     ret_code_t err_code;
     uint8_t value;
-    uint8_t addr8;  // = HMC5883L_ID_A;
-    addr8 = reg;
+    uint8_t addr8 =  reg;  // = HMC5883L_ID_A;
+    //addr8 = reg;
 
     err_code = nrf_drv_twi_tx(&m_twi_hmc5883, CAP1114_ADDR, &addr8, 1, true);
 
@@ -215,25 +208,20 @@ uint32_t who_am_i(uint8_t reg)
  */
 int main(void)
 {
-    nrf_gpio_cfg_output(I2C_RST);
-    //nrf_gpio_cfg_output(DRV_IN1);
-    nrf_gpio_pin_set(I2C_RST);
 
     debug_console_init();
 
     printf("\n\rThis is DEBUG CONSOLE\n\r");
-    
+	nrf_gpio_cfg_output(I2C_RST);
+    nrf_gpio_pin_set(I2C_RST);
+	
     hmc5883_twi_init();
     nrf_delay_ms(10);
+	
     nrf_gpio_pin_clear(I2C_RST);
     nrf_delay_ms(1);
 
-	i_am = who_am_i(CAP1114_ADDR);
-
-    prod_id = who_am_i(PROD_ID);
-    manuf_id = who_am_i(MANUF_ID);
-    rev_id = who_am_i(REV_ID);
-
+	i_am = who_am_i(CAP1114_ID);
     
     while(true)
     {
