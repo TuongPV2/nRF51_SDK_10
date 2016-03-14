@@ -20,6 +20,7 @@
 #define LEDS_LIST {LED_1}
 #define BSP_LED_0      LED_1
 #define BSP_LED_0_MASK (1<<BSP_LED_0)
+#define BSP_LED_1_MASK (1<<BSP_LED_0)
 #define LEDS_MASK      (BSP_LED_0_MASK)
 /* all LEDs are lit when GPIO is low */
 #define LEDS_INV_MASK  LEDS_MASK

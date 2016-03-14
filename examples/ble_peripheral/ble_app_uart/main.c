@@ -25,18 +25,41 @@
 #include <string.h>
 #include "nordic_common.h"
 #include "nrf.h"
+#include "nrf_delay.h"
+#include "nrf_drv_gpiote.h"
+#include "nrf_gpio.h"
+
 #include "ble_hci.h"
 #include "ble_advdata.h"
 #include "ble_advertising.h"
 #include "ble_conn_params.h"
 #include "softdevice_handler.h"
+
 #include "app_timer.h"
 #include "app_button.h"
 #include "ble_nus.h"
 #include "app_uart.h"
+#include "app_error.h" 
 #include "app_util_platform.h"
 #include "bsp.h"
 #include "bsp_btn_ble.h"
+#include "app_pwm.h"
+
+
+#ifdef BSP_BUTTON_0
+    #define PIN_IN_0 BSP_BUTTON_0
+#endif
+#ifdef BSP_BUTTON_1
+    #define PIN_IN_1 BSP_BUTTON_1
+#endif
+#ifdef BSP_BUTTON_2
+    #define PIN_IN_2 BSP_BUTTON_2
+#endif
+
+#ifdef BSP_LED_0
+    #define PIN_OUT BSP_LED_0
+#endif
+
 
 #define IS_SRVC_CHANGED_CHARACT_PRESENT 0                                           /**< Include the service_changed characteristic. If not enabled, the server's database cannot be changed for the lifetime of the device. */
 
@@ -68,6 +91,82 @@ static ble_nus_t                        m_nus;                                  
 static uint16_t                         m_conn_handle = BLE_CONN_HANDLE_INVALID;    /**< Handle of the current connection. */
 
 static ble_uuid_t                       m_adv_uuids[] = {{BLE_UUID_NUS_SERVICE, NUS_SERVICE_UUID_TYPE}};  /**< Universally unique service identifier. */
+
+static volatile bool ready_flag;            // A flag indicating PWM status.
+static volatile uint32_t flag = 0;            // A flag indicating PWM status.
+/******************************************************************************/
+APP_PWM_INSTANCE(PWM1,1);                   // Create the instance "PWM1" using TIMER1.
+APP_PWM_INSTANCE(PWM2,0);                   // Create the instance "PWM1" using TIMER1.
+
+
+void pwm1_ready_callback(uint32_t pwm_id)    // PWM callback function
+{
+    ready_flag = true;
+}
+
+void pwm2_ready_callback(uint32_t pwm_id)    // PWM callback function
+{
+    ready_flag = true;
+}
+
+void drv_ctrl_init(void)
+{
+    nrf_gpio_cfg_output(DRV_SLEEP);
+    //nrf_gpio_cfg_output(DRV_IN1);
+    nrf_gpio_pin_set(DRV_SLEEP);
+    //nrf_gpio_pin_clear(DRV_IN1);
+}
+
+void in_pin_handler_fw(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
+{
+    nrf_drv_gpiote_out_toggle(PIN_OUT);
+    //nrf_gpio_pin_clear(DRV_SLEEP);
+    //nrf_delay_ms(5);
+    //nrf_gpio_pin_clear(DRV_IN1);
+    //app_pwm_disable(&PWM1);
+    app_pwm_channel_duty_set(&PWM1, 0, 0);
+    nrf_delay_ms(1);
+    flag = 1;
+    app_pwm_enable(&PWM2);
+}
+
+void in_pin_handler_bw(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
+{
+    nrf_drv_gpiote_out_toggle(PIN_OUT);
+    app_pwm_channel_duty_set(&PWM2, 0, 0);
+    //app_pwm_disable(&PWM2);
+    nrf_delay_ms(1);
+    flag = 2;
+    app_pwm_enable(&PWM1);
+}
+
+static void gpio_init(void)
+{
+    ret_code_t err_code;
+
+    err_code = nrf_drv_gpiote_init();
+    APP_ERROR_CHECK(err_code);
+    
+    nrf_drv_gpiote_out_config_t out_config = GPIOTE_CONFIG_OUT_SIMPLE(false);
+
+    err_code = nrf_drv_gpiote_out_init(PIN_OUT, &out_config);
+    APP_ERROR_CHECK(err_code);
+
+    //nrf_drv_gpiote_in_config_t in_config = GPIOTE_CONFIG_IN_SENSE_TOGGLE(true);
+    nrf_drv_gpiote_in_config_t in_config = GPIOTE_CONFIG_IN_SENSE_LOTOHI(true);
+    in_config.pull = NRF_GPIO_PIN_PULLUP;
+
+    err_code = nrf_drv_gpiote_in_init(PIN_IN_0, &in_config, in_pin_handler_fw);
+    APP_ERROR_CHECK(err_code);
+    err_code = nrf_drv_gpiote_in_init(PIN_IN_1, &in_config, in_pin_handler_bw);
+    APP_ERROR_CHECK(err_code);
+    //err_code = nrf_drv_gpiote_in_init(PIN_IN_2, &in_config, in_pin_handler_duty);
+    //APP_ERROR_CHECK(err_code);    
+    nrf_drv_gpiote_in_event_enable(PIN_IN_0, true);
+    nrf_drv_gpiote_in_event_enable(PIN_IN_1, true);
+    //nrf_drv_gpiote_in_event_enable(PIN_IN_2, true);
+}
+
 
 
 /**@brief Function for assert macro callback.
@@ -433,11 +532,11 @@ static void uart_init(void)
     {
         RX_PIN_NUMBER,
         TX_PIN_NUMBER,
-        RTS_PIN_NUMBER,
-        CTS_PIN_NUMBER,
-        APP_UART_FLOW_CONTROL_ENABLED,
+        NULL,
+        NULL,
+        APP_UART_FLOW_CONTROL_DISABLED,
         false,
-        UART_BAUDRATE_BAUDRATE_Baud38400
+        UART_BAUDRATE_BAUDRATE_Baud115200
     };
 
     APP_UART_FIFO_INIT( &comm_params,
@@ -516,6 +615,24 @@ int main(void)
     bool erase_bonds;
     uint8_t  start_string[] = START_STRING;
     
+    drv_ctrl_init();
+	gpio_init();
+	
+    app_pwm_config_t pwm1_cfg = APP_PWM_DEFAULT_CONFIG_1CH(5000L, DRV_IN1);
+    app_pwm_config_t pwm2_cfg = APP_PWM_DEFAULT_CONFIG_1CH(5000L, DRV_IN2);
+    /* Switch the polarity of the second channel. */
+    pwm1_cfg.pin_polarity[1] = APP_PWM_POLARITY_ACTIVE_HIGH;
+    pwm2_cfg.pin_polarity[1] = APP_PWM_POLARITY_ACTIVE_HIGH;
+
+    /* Initialize and enable PWM. */
+    err_code = app_pwm_init(&PWM1,&pwm1_cfg,pwm1_ready_callback);
+    APP_ERROR_CHECK(err_code);
+    //app_pwm_enable(&PWM1);
+    err_code = app_pwm_init(&PWM2,&pwm2_cfg,pwm2_ready_callback);
+    APP_ERROR_CHECK(err_code);
+    //app_pwm_enable(&PWM2);    
+
+
     // Initialize.
     APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, false);
     uart_init();
