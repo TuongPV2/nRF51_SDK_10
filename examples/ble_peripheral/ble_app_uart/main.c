@@ -23,8 +23,12 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
+#include "SEGGER_RTT_Conf.h"
+#include "SEGGER_RTT.h"
 #include "nordic_common.h"
 #include "nrf.h"
+#include "nrf_delay.h"
 #include "ble_hci.h"
 #include "ble_advdata.h"
 #include "ble_advertising.h"
@@ -484,8 +488,6 @@ static void advertising_init(void)
 //}
 
 
-/**@brief Application main function.
- */
 int main(void)
 {
     uint32_t err_code;
@@ -506,12 +508,19 @@ int main(void)
 
     err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
     APP_ERROR_CHECK(err_code);
-    
-    // Enter main loop.
-    for (;;)
-    {
-        //power_manage();
-    }
+    //SEGGER_RTT_Init();
+	SEGGER_RTT_WriteString(0, "Hello World!\n");
+	char c = 0;
+	for (;;)
+	{
+		c = SEGGER_RTT_WaitKey(); // will block until data is available
+		if(c == 'r'){
+			SEGGER_RTT_WriteString(0, "Resetting..\n");
+			nrf_delay_ms(1000);
+			sd_nvic_SystemReset();
+		}
+		//power_manage();
+	}
 }
 
 
